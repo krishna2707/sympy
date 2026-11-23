@@ -1692,7 +1692,19 @@ class LatexPrinter(Printer):
         if name is not None:
             return name
 
-        return self._deal_with_super_sub(expr.name, style=style)
+        # Leading and trailing underscores are part of the symbol name, not
+        # subscript markers. Protect them while splitting superscripts and
+        # subscripts, then render them as escaped literal underscores.
+        name = expr.name
+        marker = '\uE000'
+        if name.startswith('_'):
+            count = len(name) - len(name.lstrip('_'))
+            name = marker*count + name[count:]
+        if name.endswith('_'):
+            count = len(name) - len(name.rstrip('_'))
+            name = name[:-count] + marker*count
+
+        return self._deal_with_super_sub(name, style=style).replace(marker, r'\_')
 
     _print_RandomSymbol = _print_Symbol
 
